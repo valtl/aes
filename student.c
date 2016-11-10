@@ -33,7 +33,7 @@ void aes128_encrypt(void *buffer, void *param)
 	//key espansion
 	for (i=1;i<=10;i++){
 		if (i mod 4 = 0){//sonderfall alle 4
-            key[i*16]=key
+            key[i*16]=key...;
 
 		}
 		else{
