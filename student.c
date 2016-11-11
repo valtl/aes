@@ -10,6 +10,7 @@ void *aes128_init(void *key)
 
 
 uint8_t sBoxLookup(uint8_t input);
+uint8_t rConLookup( uint8_t input);
 
 void aes128_encrypt(void *buffer, void *param)
 {
@@ -22,20 +23,20 @@ void aes128_encrypt(void *buffer, void *param)
 
 	//key espansion
 	for (int i=1;i<=10;i++){//sonderfall alle 4 // modolo mit 4 entspricht bitweiser addition mit 3!!! i & 3 == 0
-        key[i*16]  =sBoxLookup(key[i*16-2]);
-        key[i*16+1]=sBoxLookup(key[i*16-2]);
-        key[i*16+2]=sBoxLookup(key[i*16-1]);
-        key[i*16+3]=sBoxLookup(key[i*16-4]);
+        key[i*16]  =(sBoxLookup(key[i*16-3]))^key[i*16-16]^rConLookup(i-1);
+        key[i*16+1]=(sBoxLookup(key[i*16-2]))^key[i*16-15];
+        key[i*16+2]=(sBoxLookup(key[i*16-1]))^key[i*16-14];
+        key[i*16+3]=(sBoxLookup(key[i*16-4]))^key[i*16-13];
 
 		for (int j=(i*16+4); j<=(i*16+15); j++){
 			key[j]=key[j-4] ^ key[j-16];
 		}
 
-		if (i == 1){
-            for (int k=0; k<=15; k++){
-                mes[k] = key[k+16];
-            }
-		}
+//		if (i == 10){
+//            for (int k=0; k<=15; k++){
+//                mes[k] = key[k+32];
+//            }
+//		}
 	}
 }
 
@@ -82,4 +83,11 @@ uint8_t sBoxLookup(uint8_t input){
     0x8C, 0xA1, 0x89, 0x0D, 0xBF, 0xE6, 0x42, 0x68, 0x41, 0x99, 0x2D, 0x0F, 0xB0, 0x54, 0xBB, 0x16,
     };
     return Sbox[input];
+}
+
+uint8_t rConLookup( uint8_t input){
+    uint8_t Rcon[10] = {
+    0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1B, 0x36,
+    };
+    return Rcon[input];
 }
