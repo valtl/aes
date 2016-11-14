@@ -1,28 +1,28 @@
-
+                                                    //Hausaufgabe AES programmieren
 // OPTIONS: -O2 -std=gnu99
 #include "student.h"
 #include <inttypes.h>
 
-void *aes128_init(void *key)
-{
-	return key;                 //Den Key weitergeben und jedesmal neu rechnen
+void *aes128_init(void *key)                        //Die vorgegebene initialisierungsfunktion reicht den key nur weiter.
+{                                                   //Die möglichkeit von precomputation wird nicht genutzt
+	return key;                                     //Den Key weitergeben und jedesmal neu rechnen. einfacher als malloc
 }
 
-
+                                                    //Deklaration aller funktionen
 uint8_t sBoxLookup(uint8_t input);
 uint8_t rConLookup( uint8_t input);
 
-void aes128_encrypt(void *buffer, void *param)
-{
-	uint8_t key[176]; 	 //ein key ist [16] => man braucht für 11 runden 176
-	uint8_t *mes;
-	mes = buffer;
-	for (int i=0;i<16;i++){
+void aes128_encrypt(void *buffer, void *param)      //die "eigentliche" Funktion. Hier wird der gesammte AES gemanaged.
+{                                                   //zunächst werden alle verwendeten Variablen initialisiert
+	uint8_t key[176]; 	                            //ein key ist [16] => man braucht für 11 runden 176
+	uint8_t *mes;                                   //Da buffer nur die zu verschlüsselnde Nachricht enthält wird buffer umbenannt.
+	mes = buffer;                                   //Es macht Sinn die Nachricht nicht "neu" anzulegen, sondern mit dem pointer auf
+	for (int i=0;i<16;i++){                         //der ursprünglichen Nachhricht zu arbeiten, da buffer die Ausgabe sein soll. (den Cifer enthalten soll)
         key[i] = ((uint8_t*)param)[i];
 	}
 
-	//key espansion
-	for (int i=1;i<=10;i++){//sonderfall alle 4 // modolo mit 4 entspricht bitweiser addition mit 3!!! i & 3 == 0
+                                                    //key expansion
+	for (int i=1;i<=10;i++){                        //sonderfall alle 4 // modolo mit 4 entspricht bitweiser addition mit 3!!! i & 3 == 0 wird aber nicht benötigt
         key[i*16]  =(sBoxLookup(key[i*16-3]))^key[i*16-16]^rConLookup(i-1);
         key[i*16+1]=(sBoxLookup(key[i*16-2]))^key[i*16-15];
         key[i*16+2]=(sBoxLookup(key[i*16-1]))^key[i*16-14];
@@ -30,14 +30,13 @@ void aes128_encrypt(void *buffer, void *param)
 
 		for (int j=(i*16+4); j<=(i*16+15); j++){
 			key[j]=key[j-4] ^ key[j-16];
-		}
-
-//		if (i == 10){
-//            for (int k=0; k<=15; k++){
-//                mes[k] = key[k+32];
-//            }
-//		}
+		}                                           //ende key expansion
 	}
+
+
+    for (int k=0; k<=15; k++){                      //Prüffunktion zur kontrolle der ausgerechneten Keys
+        mes[k] = key[k+32];
+    }
 }
 
 
@@ -63,7 +62,7 @@ void *addRoundKey(void *input, void *key){
     return &result;
 }*/
 
-uint8_t sBoxLookup(uint8_t input){
+uint8_t sBoxLookup(uint8_t input){                  //Funktion die den Lookup aus der Sbox ausgibt.
     uint8_t Sbox[256] = {
     0x63, 0x7C, 0x77, 0x7B, 0xF2, 0x6B, 0x6F, 0xC5, 0x30, 0x01, 0x67, 0x2B, 0xFE, 0xD7, 0xAB, 0x76,
     0xCA, 0x82, 0xC9, 0x7D, 0xFA, 0x59, 0x47, 0xF0, 0xAD, 0xD4, 0xA2, 0xAF, 0x9C, 0xA4, 0x72, 0xC0,
@@ -85,7 +84,7 @@ uint8_t sBoxLookup(uint8_t input){
     return Sbox[input];
 }
 
-uint8_t rConLookup( uint8_t input){
+uint8_t rConLookup( uint8_t input){                 //Funktion die als Lookup den Rcon ausgibt.
     uint8_t Rcon[10] = {
     0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1B, 0x36,
     };
