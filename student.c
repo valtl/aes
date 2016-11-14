@@ -1,5 +1,4 @@
-                                                    //Hausaufgabe AES programmieren
-// OPTIONS: -O2 -std=gnu99
+                                                    //Hausaufgabe AES programmieren// OPTIONS: -O2 -std=gnu99
 #include "student.h"
 #include <inttypes.h>
 
