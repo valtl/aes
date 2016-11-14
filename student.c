@@ -11,6 +11,7 @@ void *aes128_init(void *key)                        //Die vorgegebene initialisi
                                                     //Deklaration aller funktionen
 uint8_t sBoxLookup(uint8_t input);
 uint8_t rConLookup( uint8_t input);
+uint8_t xtime(uint8_t input);
 
 void aes128_encrypt(void *buffer, void *param)      //die "eigentliche" Funktion. Hier wird der gesammte AES gemanaged.
 {                                                   //zunächst werden alle verwendeten Variablen initialisiert
@@ -33,34 +34,48 @@ void aes128_encrypt(void *buffer, void *param)      //die "eigentliche" Funktion
 		}                                           //ende key expansion
 	}
 
-
-    for (int k=0; k<=15; k++){                      //Prüffunktion zur kontrolle der ausgerechneten Keys
-        mes[k] = key[k+32];
+    for (int j=0; j<=15; j++){                      //loop 0 (in der ersten loop nur Schritt 4 AddRoundkey
+        mes[j]=mes[j] ^ key[j];
     }
-}
-
-
-/*
-void *shiftRows(void *input){   //input ist int[16]
-    uint8_t eingang = *input;
-    uint8_t result[16];
-    for (i=1;i<=4;i++){
-        for (j=1;j<=4;j++){
-            result[i*4-4+((j-i) modulus 4)+1]=eingang[i*4-4+j]
+                                                    //Standard loop 1 - 9
+    for (int i=1; i<=9; i++){
+        for (int j=0; j<=15; j++){
+            mes[j] = sBoxLookup(mes[j]);            //Schritt 1 SubBytes
         }
-    }
-    *input = result;
-    return &result;
-}
+        uint8_t mestmp[16];                         //Schritt 2 Row shift
+        mestmp[0] = mes[0]; mestmp[4] = mes[4]; mestmp[8] = mes[8]; mestmp[12] = mes[12];   //erste Reihe von Rowshift. wird nicht benötigt.
+        mestmp[1] = mes[5]; mestmp[5] = mes[9]; mestmp[9] = mes[13]; mestmp[13] = mes[1];   //zweite Reihe vom rowshift
+        mestmp[2] = mes[10]; mestmp[6] = mes[14]; mestmp[10] = mes[2]; mestmp[14] = mes[6]; //dritte Reihe vom rowshift
+        mestmp[3] = mes[15]; mestmp[7] = mes[3]; mestmp[11] = mes[7]; mestmp[15] = mes[11]; //vierte Reihe vom rowshift
+                                                    //Schritt 3 Mix colums
+        for (int j=0; j<4; j++){                                                            //für jede Spalte
+            int k=j*4;
+            mes[k+0] = xtime(mestmp[k+0])                   + (xtime(mestmp[k+1]) + mestmp[k+1])    + mestmp[k+2]                           + mestmp[k+3];
+            mes[k+1] = mestmp[k+0]                          + xtime(mestmp[k+1])                    + (xtime(mestmp[k+2]) + mestmp[k+2])    + mestmp[k+3];
+            mes[k+2] = mestmp[k+0]                          + mestmp[k+1]                           + xtime(mestmp[k+2])                    + (xtime(mestmp[k+3]) + mestmp[k+3]);
+            mes[k+3] = (xtime(mestmp[k+0]) + mestmp[k+0])   + mestmp[k+1]                           + mestmp[k+2]                           + xtime(mestmp[k+3]);
+        }
+        for (int j=0; j<=15; j++){                  //Schritt 4 AddRoundkey
+            mes[j]=mes[j] ^ key[j+16*i];
+        }
+    }                                               //ende Standard loop
 
-void *addRoundKey(void *input, void *key){
-    uint8_t result[16];
-    for (i=1; i<=16; i++){
-        result[i]=*input[i] ^ *key;
+    for (int j=0; j<=15; j++){              //loop 10 (nur Schritt 1, 2 & 4)
+        mes[j] = sBoxLookup(mes[j]);                //Schritt 1 SubBytes
     }
-    *input = result
-    return &result;
-}*/
+    uint8_t mestmp[16];                         //Schritt 2 Row shift
+    mestmp[0] = mes[0]; mestmp[4] = mes[4]; mestmp[8] = mes[8]; mestmp[12] = mes[12];   //erste Reihe von Rowshift. wird nicht benötigt.
+    mestmp[1] = mes[5]; mestmp[5] = mes[9]; mestmp[9] = mes[13]; mestmp[13] = mes[1];   //zweite Reihe vom rowshift
+    mestmp[2] = mes[10]; mestmp[6] = mes[14]; mestmp[10] = mes[2]; mestmp[14] = mes[6]; //dritte Reihe vom rowshift
+    mestmp[3] = mes[15]; mestmp[7] = mes[3]; mestmp[11] = mes[7]; mestmp[15] = mes[11]; //vierte Reihe vom rowshift
+    for (int j=0; j<=15; j++){                  //Schritt 4 AddRoundkey
+        mes[j]=mestmp[j] ^ key[j+16*10];
+    }
+
+  /*  for (int k=0; k<=15; k++){                      //Prüffunktion zur kontrolle der ausgerechneten Keys
+        mes[k] = key[k+32];
+    } */
+}
 
 uint8_t sBoxLookup(uint8_t input){                  //Funktion die den Lookup aus der Sbox ausgibt.
     uint8_t Sbox[256] = {
@@ -89,4 +104,8 @@ uint8_t rConLookup( uint8_t input){                 //Funktion die als Lookup de
     0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1B, 0x36,
     };
     return Rcon[input];
+}
+
+uint8_t xtime(uint8_t input){
+  return ((input<<1) ^ (((input>>7) & 1) * 0x1b));
 }
