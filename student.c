@@ -1,4 +1,5 @@
-                                                    //Hausaufgabe AES programmieren// OPTIONS: -O2 -std=gnu99
+                                                    //Hausaufgabe AES programmieren
+// OPTIONS: -O2 -std=gnu99
 #include "student.h"
 #include <inttypes.h>
 
@@ -46,13 +47,14 @@ void aes128_encrypt(void *buffer, void *param)      //die "eigentliche" Funktion
         mestmp[1] = mes[5]; mestmp[5] = mes[9]; mestmp[9] = mes[13]; mestmp[13] = mes[1];   //zweite Reihe vom rowshift
         mestmp[2] = mes[10]; mestmp[6] = mes[14]; mestmp[10] = mes[2]; mestmp[14] = mes[6]; //dritte Reihe vom rowshift
         mestmp[3] = mes[15]; mestmp[7] = mes[3]; mestmp[11] = mes[7]; mestmp[15] = mes[11]; //vierte Reihe vom rowshift
-                                                    //Schritt 3 Mix colums
+
+                                                   //Schritt 3 Mix colums
         for (int j=0; j<4; j++){                                                            //für jede Spalte
             int k=j*4;
-            mes[k+0] = xtime(mestmp[k+0])                   + (xtime(mestmp[k+1]) + mestmp[k+1])    + mestmp[k+2]                           + mestmp[k+3];
-            mes[k+1] = mestmp[k+0]                          + xtime(mestmp[k+1])                    + (xtime(mestmp[k+2]) + mestmp[k+2])    + mestmp[k+3];
-            mes[k+2] = mestmp[k+0]                          + mestmp[k+1]                           + xtime(mestmp[k+2])                    + (xtime(mestmp[k+3]) + mestmp[k+3]);
-            mes[k+3] = (xtime(mestmp[k+0]) + mestmp[k+0])   + mestmp[k+1]                           + mestmp[k+2]                           + xtime(mestmp[k+3]);
+            mes[k+0] = xtime(mestmp[k+0])                   ^ (xtime(mestmp[k+1]) ^ mestmp[k+1])    ^ mestmp[k+2]                           ^ mestmp[k+3];
+            mes[k+1] = mestmp[k+0]                          ^ xtime(mestmp[k+1])                    ^ (xtime(mestmp[k+2]) ^ mestmp[k+2])    ^ mestmp[k+3];
+            mes[k+2] = mestmp[k+0]                          ^ mestmp[k+1]                           ^ xtime(mestmp[k+2])                    ^ (xtime(mestmp[k+3]) ^ mestmp[k+3]);
+            mes[k+3] = (xtime(mestmp[k+0]) ^ mestmp[k+0])   ^ mestmp[k+1]                           ^ mestmp[k+2]                           ^ xtime(mestmp[k+3]);
         }
         for (int j=0; j<=15; j++){                  //Schritt 4 AddRoundkey
             mes[j]=mes[j] ^ key[j+16*i];
@@ -70,7 +72,6 @@ void aes128_encrypt(void *buffer, void *param)      //die "eigentliche" Funktion
     for (int j=0; j<=15; j++){                  //Schritt 4 AddRoundkey
         mes[j]=mestmp[j] ^ key[j+16*10];
     }
-
   /*  for (int k=0; k<=15; k++){                      //Prüffunktion zur kontrolle der ausgerechneten Keys
         mes[k] = key[k+32];
     } */
