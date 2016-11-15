@@ -107,5 +107,9 @@ uint8_t rConLookup( uint8_t input){                 //Funktion die als Lookup de
 }
 
 uint8_t xtime(uint8_t input){
-  return ((input<<1) ^ (((input>>7) & 1) * 0x1b));
+    uint8_t output = (input<<1);
+    if (((input>>7) & 1) == 1){
+        output = output ^ 0x1b;
+    }
+    return output;
 }
